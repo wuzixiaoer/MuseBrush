@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flask上传图片演示</title>
+</head>
+<body>
+    <h1>请选择风格</h1>
+    <form action="" enctype='multipart/form-data' method='POST'>
+        <input type="checkbox" name="style" value="1"/>风格1<br />
+        <input type="checkbox" name="style" value="2"/>风格2<br />
+        <input type="checkbox" name="style" value="3"/>风格3<br />
+        <h1>请选择内容图片</h1>
+           <form action="" enctype='multipart/form-data' method='POST'>
+           <input type="file" name="content" style="margin-top:20px;"/>
+        <br>
+        <i>请输入你当前的心情（开心、超开心、超超开心）：</i>
+        <input type="text" class="txt_input" name="name"  value="超超开心" style="margin-top:10px;"/>
+        <input type="submit" value="上传" class="button-new" style="margin-top:15px;"/>
+    </form>
+</body>
+</html>
