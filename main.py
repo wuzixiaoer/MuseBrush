@@ -48,6 +48,10 @@ def go_into_a_painting():
 
     return render_template('upload.html')
 
+@app.route('/style', methods=['POST', 'GET'])
+def style():
+    return render_template('style.html')
+
 
 if __name__ == '__main__':
     # app.debug = True
