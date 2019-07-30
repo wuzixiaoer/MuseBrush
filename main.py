@@ -19,6 +19,7 @@ app = Flask(__name__)
 # 设置静态文件缓存过期时间
 app.send_file_max_age_default = timedelta(seconds=1)
 
+# 这块儿加首页
 @app.route('/')
 def index():
     return redirect(url_for('go_into_a_painting'))
@@ -39,8 +40,8 @@ def go_into_a_painting():
         f.save(upload_path)
 
         # 使用Opencv转换一下图片格式和名称
-        img = cv2.imread(upload_path)
-        cv2.imwrite(os.path.join(basepath, 'static/images', 'test1.jpg'), img)
+        # img = cv2.imread(upload_path)
+        # cv2.imwrite(os.path.join(basepath, 'static/images', 'test1.jpg'), img)
 
         return redirect(url_for('style'))
 
@@ -57,4 +58,4 @@ def style():
 
 if __name__ == '__main__':
     # app.debug = True
-    app.run(host='localhost', port=8987, debug=True)
+    app.run(host='localhost', port=8080, debug=True)
