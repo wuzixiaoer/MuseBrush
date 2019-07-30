@@ -34,8 +34,8 @@ cfg.merge_from_file("./config/ade20k-resnet50dilated-ppm_deepsup.yaml")
 content="./imgs/li.jpg"
 style = "./imgs/brushstrokes.jpg"
 vgg_path='./pretrained/style_models/vgg_normalised.pth'
-decoder_path='./pretrained/style_models/decoder_iter_100000.pth'
-transform_path='./pretrained/style_models/sa_module_iter_100000.pth'
+decoder_path='./pretrained/style_models/decoder_iter_76000.pth'
+transform_path='./pretrained/style_models/sa_module_iter_76000.pth'
 
 # Additional options
 content_size=512
@@ -95,7 +95,7 @@ mask.save('./mask.png')
 grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
 output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
 content_s = Image.fromarray(output_ndarr)
-content_s.save('./ss.png')
+content_s.save('./results/content_transfered.png')
 
 bg = style
 locx = bg.size[0]-content_s.size[0]
@@ -103,7 +103,7 @@ locy = bg.size[1]-content_s.size[1]
 
 bg.paste(content_s,box=(locx,locy),mask=mask)
 
-bg.save('./mask.png')
+bg.save('./results/embedded.png')
 
 
 

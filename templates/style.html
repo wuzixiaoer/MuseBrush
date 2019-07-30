@@ -18,6 +18,7 @@
 		<![endif]-->
 		<script src="../static/js/TweenMax.min.js"></script>
 		<script src="../static/js/jquery.min.js"></script>
+		<script src="../static/js/gallery.js"></script>
 	</head>
 	<body>
 	    <form action="" enctype='multipart/form-data' method='POST'>
@@ -39,22 +40,22 @@
 				<div class="gallery">
 					<ul class="gallery-pictures">
 						<li class="gallery-picture">
-							<img src="../static/img/1.jpg" alt="img01" width=200 height=250>
+							<img src="../static/style_img/1.jpg" alt="img01" width=200 height=250>
 						</li>
 						<li class="gallery-picture">
-							<img src="../static/img/2.jpg" alt="img02" width=350 height=250>
+							<img src="../static/style_img/2.jpg" alt="img02" width=350 height=250>
 						</li>
 						<li class="gallery-picture">
-							<img src="../static/img/3.jpg" alt="img03" width=350 height=250>
+							<img src="../static/style_img/3.jpg" alt="img03" width=350 height=250>
 						</li>
 						<li class="gallery-picture">
-							<img src="../static/img/4.jpg" alt="img04" width=350 height=250>
+							<img src="../static/style_img/4.jpg" alt="img04" width=350 height=250>
 						</li>
 						<li class="gallery-picture">
-							<img src="../static/img/5.jpg" alt="img05" width=350 height=250>
+							<img src="../static/style_img/5.jpg" alt="img05" width=350 height=250>
 						</li>
 						<li class="gallery-picture">
-							<img src="../static/img/6.jpg" alt="img06" width=180 height=250>
+							<img src="../static/style_img/6.jpg" alt="img06" width=180 height=250>
 						</li>
 					</ul>
 					<div class="gallery-pagination">
@@ -69,7 +70,8 @@
 				</div>
 				<div class="choose-button">
 
-					<button type="button" class="choose-button-dot" onclick="openhtml()">Choose this style</button>
+					<button type="button" class="choose-button-dot" onclick="styleEnsure()">Choose this style</button>
+					
 					<!--<script>function openhtml()-->
 					<!--{-->
 						<!--window.open("upload_ok.html")-->

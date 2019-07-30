@@ -3,7 +3,8 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 import time
-import config
+import urllib
+import re
 
 from datetime import timedelta
 
@@ -27,11 +28,11 @@ def index():
 def go_into_a_painting():
     if request.method == 'POST':
         f = request.files['content']
-
+        print(f.filename)
         if not (f and allowed_file(f.filename)):
             return jsonify({"error": 1001, "msg": "请检查上传的图片类型，仅限于png、PNG、jpg、JPG、bmp"})
 
-        user_input = request.form.get("name")
+        #user_input = request.form.get("name")
 
         basepath = os.path.abspath(os.path.dirname(__file__))  # 当前文件所在路径
 
@@ -39,22 +40,28 @@ def go_into_a_painting():
         f.save(upload_path)
 
         # 使用Opencv转换一下图片格式和名称
-        img = cv2.imread(upload_path)
-        cv2.imwrite(os.path.join(basepath, 'static/images', 'test1.jpg'), img)
+        # img = cv2.imread(upload_path)
+        # cv2.imwrite(os.path.join(basepath, 'static/images', 'content.jpg'), img)
 
         return redirect(url_for('style'))
 
     return render_template('upload.html')
 
-@app.route('/style', methods=['POST', 'GET'])
-def style():
-    if request.method == 'POST':
 
-        return render_template('upload_ok.html', userinput=user_input, val1=time.time())
+@app.route('/style', methods=['GET', 'POST'])
+def style():
+    
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    stylepath = os.path.join(path, 'static/i')
+    img = cv2.imread(stylepath)
+    cv2.imwrite(os.path.join(path, 'static/images', 'style.jpg'), img)
 
     return render_template('style.html')
 
 
-if __name__ == '__main__':
-    # app.debug = True
-    app.run(host='0.0.0.0', port=8987, debug=True)
+
+@app.route('/result', methods=['POST', 'GET'])
+def result():
+    return render_template('result.html')
+
+    

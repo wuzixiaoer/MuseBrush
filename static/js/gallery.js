@@ -152,7 +152,10 @@ $(document).ready(function() {
 	    	momentumTween=null;
 	    	updateGalleryPos();
 	    }
-    }
+	}
+	function styleEnsure(){
+		
+		return}
 
     setGalleryPos(0,false);
 })
