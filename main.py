@@ -44,21 +44,16 @@ def go_into_a_painting():
         basepath = os.path.abspath(os.path.dirname(__file__))  # 当前文件所在路径
 
         upload_path = os.path.join(basepath, 'static/images', secure_filename(f.filename))  # 注意：没有的文件夹一定要先创建，不然会提示没有该路径
-        f.save(upload_path)
-
         # 使用Opencv转换一下图片格式和名称
         img = cv2.imread(upload_path)
         cv2.imwrite(os.path.join(basepath, 'static/images', 'image1.jpg'), img)
 
         # cal mask
-
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         content = "static/images/image1.jpg"
         content = Image.open(content)
 
         cm = calmask(cfg,gpu=0)
-
-        # print(content)
         img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
 
         mask = cm.inference(img=img)
@@ -66,6 +61,11 @@ def go_into_a_painting():
         mask = np.where(mask == _max, 255, 0)
         mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
         mask.save('static/mask.png')
+
+        grid = make_grid(content, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
+        output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+        content_s = Image.fromarray(output_ndarr)
+        content_s.save('static/segmentation.png')
 
         redirect(url_for('style'))
 
