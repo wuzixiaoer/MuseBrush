@@ -6,3 +6,6 @@ We enable one to copy an object in a photo and paste it into a painting so that 
 It mainly includes two sub-modules:
 - Object Segemntation
 - Style Transfer
+
+Pretrained Model Link:
+http://sceneparsing.csail.mit.edu/model/pytorch/
