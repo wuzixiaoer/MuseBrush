@@ -3,5 +3,5 @@
 ckpt/
 vis/
 log/
-pretrained/
+utils/pretrained/
 __pycache__/

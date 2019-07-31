@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 import time
+<<<<<<< HEAD
 import config
 from utils.config import cfg
 import json
@@ -11,6 +12,10 @@ from utils.genMask import calmask
 import numpy as np
 import pandas as pd
 from PIL import Image,ImageFilter
+=======
+import urllib
+import re
+>>>>>>> 58593f05a72150961598dd97e7ec88e2273ffcd9
 
 from datetime import timedelta
 
@@ -26,7 +31,6 @@ app = Flask(__name__)
 # 设置静态文件缓存过期时间
 app.send_file_max_age_default = timedelta(seconds=1)
 
-# 这块儿加首页
 @app.route('/')
 def index():
     return redirect(url_for('go_into_a_painting'))
@@ -35,11 +39,11 @@ def index():
 def go_into_a_painting():
     if request.method == 'POST':
         f = request.files['content']
-
+        print(f.filename)
         if not (f and allowed_file(f.filename)):
             return jsonify({"error": 1001, "msg": "请检查上传的图片类型，仅限于png、PNG、jpg、JPG、bmp"})
 
-        user_input = request.form.get("name")
+        #user_input = request.form.get("name")
 
         basepath = os.path.abspath(os.path.dirname(__file__))  # 当前文件所在路径
 
@@ -48,7 +52,7 @@ def go_into_a_painting():
 
         # 使用Opencv转换一下图片格式和名称
         # img = cv2.imread(upload_path)
-        # cv2.imwrite(os.path.join(basepath, 'static/images', 'test1.jpg'), img)
+        # cv2.imwrite(os.path.join(basepath, 'static/images', 'content.jpg'), img)
 
         # cal mask
         cm = calmask(cfg,gpu=0)
@@ -79,6 +83,9 @@ def style():
     # # return data                  
     # return "success"
 
-if __name__ == '__main__':
-    # app.debug = True
-    app.run(host='localhost', port=8080, debug=True)
+
+@app.route('/result', methods=['POST', 'GET'])
+def result():
+    return render_template('result.html')
+
+    
