@@ -11,6 +11,7 @@ from utils.stylizer import styleTrans,test_transform
 from utils.genMask import calmask
 import numpy as np
 import pandas as pd
+from torchvision.utils import make_grid
 from PIL import Image,ImageFilter
 
 from datetime import timedelta
@@ -57,15 +58,25 @@ def go_into_a_painting():
         img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
 
         mask = cm.inference(img=img)
-        _max = pd.value_counts(mask.flatten()).keys()[0]
-        mask = np.where(mask == _max, 255, 0)
+        # _max = pd.value_counts(mask.flatten()).keys()[0]
+        _mask = mask = np.where(mask == 12, 255, 0)
         mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
         mask.save('static/mask.png')
 
-        grid = make_grid(content, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
-        output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
-        content_s = Image.fromarray(output_ndarr)
-        content_s.save('static/segmentation.png')
+        mask = mask.convert("RGBA")
+        pixdata = mask.load()
+        L, H = mask.size
+        for l in range(L):
+            for h in range(H):
+                if pixdata[l, h][0] == 0 and pixdata[l, h][1] == 0 and pixdata[l, h][2] == 0:
+                    pixdata[l, h] = (0, 0, 0, 0)
+
+        mask.save('static/mask_new.png')
+
+
+        imagenew = Image.new("RGBA", (512, 512))
+        imagenew.paste(content,(0,0), mask=mask)
+        imagenew.save('static/segmention.png')
 
         redirect(url_for('style'))
 
