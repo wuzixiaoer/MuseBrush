@@ -8,7 +8,7 @@ import sys
 import torch
 import torch.nn as nn
 import math
-from lib.nn import SynchronizedBatchNorm2d
+from utils.lib.nn import SynchronizedBatchNorm2d
 
 try:
     from urllib import urlretrieve

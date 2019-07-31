@@ -32,10 +32,10 @@ cfg.merge_from_file("./config/ade20k-resnet50dilated-ppm_deepsup.yaml")
 
 # const for style trans
 content="./imgs/li.jpg"
-style = "./imgs/brushstrokes.jpg"
+style = "./imgs/sy.jpg,./imgs/sy_patch.jpg"
 vgg_path='./pretrained/style_models/vgg_normalised.pth'
-decoder_path='./pretrained/style_models/decoder_iter_76000.pth'
-transform_path='./pretrained/style_models/sa_module_iter_76000.pth'
+decoder_path='./pretrained/style_models/decoder_iter_92000.pth'
+transform_path='./pretrained/style_models/sa_module_iter_92000.pth'
 
 # Additional options
 content_size=512
@@ -55,35 +55,51 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 assert content
 assert style
 
+# Path preprocessing
+if os.path.isdir(style):
+    style_paths = [os.path.join(style, f) for f in
+                   os.listdir(style)]
+else:
+    style_paths = style.split(',')
+    if len(style_paths) == 1:
+        style_paths = [style]
+    else:
+        do_interpolation = True
+if not os.path.exists(output_path):
+    os.mkdir(output_path)
+
+
 content_tf = test_transform(content_size,crop)
 style_tf = test_transform(style_size,crop)
 # preprocessing the image
-content = Image.open(content)
-style = Image.open(style)
-csize = content.size
+#style = Image.open(style)
+#csize = content.size
 
+transformer = styleTrans(device=device,vgg_path=vgg_path,
+                transform_path=transform_path,
+                decoder_path=decoder_path)
 """
 ssize = style.size
 box = (ssize[0]-csize[0],ssize[1]-csize[1],ssize[0],ssize[1])
 style = style.crop(box)
 """
 
+patch_percent = 0.8
 _content = content_tf(content)
 _style = style_tf(style)
 
-_style = _style.to(device).unsqueeze(0)
-_content = _content.to(device).unsqueeze(0)
-transformer = styleTrans(device=device,vgg_path=vgg_path,
-                        transform_path=transform_path,
-                        decoder_path=decoder_path)
-
+_style = torch.stack([style_tf(Image.open(p)) for p in style_paths])
+_content = content_tf(Image.open(content)) \
+            .unsqueeze(0).expand_as(style)
+_style = _style.to(device)
+_content = _content.to(device)
 with torch.no_grad():
-    content_trans = transformer.stansform(content=_content,style=_style,alpha=alpha)
-content_trans = content_trans.cpu()
-
+    content_trans = transformer.stansform(content=_content,style=_style,interpolation_weights=[patch_percent,1-patch_percent],alpha=alpha)
+    content_trans = content_trans.cpu()
 
 # cal mask
 cm = calmask(cfg,gpu=0)
+content = Image.open(content)
 img = cv2.cvtColor(np.asarray(content),cv2.COLOR_RGB2BGR)  
 
 mask = cm.inference(img=img)
@@ -91,6 +107,8 @@ _max = pd.value_counts(mask.flatten()).keys()[0]
 mask = np.where(mask == _max, 255, 0)
 mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
 mask.save('./results/mask.png')
+
+
 
 grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
 output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()

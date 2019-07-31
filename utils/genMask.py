@@ -9,31 +9,32 @@ import torch.nn as nn
 from scipy.io import loadmat
 import csv
 # Our libs
-from dataset import TestDataset
-from models import ModelBuilder, SegmentationModule
+from utils.dataset import TestDataset
+from utils.models import ModelBuilder, SegmentationModule
 #from utils import colorEncode, find_recursive, setup_logger
-from lib.nn import user_scattered_collate, async_copy_to
-from lib.utils import as_numpy
+from utils.lib.nn import user_scattered_collate, async_copy_to
+from utils.lib.utils import as_numpy
 import cv2
 from tqdm import tqdm
-from config import cfg
+from utils.config import cfg
 from PIL import Image,ImageFilter
 from torchvision import transforms
 import pandas as pd
 
 class calmask():
     def __init__(self,cfg,gpu=0):
+        print(torch.cuda.get_device_name(0))
         torch.cuda.set_device(gpu)
         builder = ModelBuilder()
         net_encoder = builder.build_encoder(
             arch="resnet50dilated",
             fc_dim=2048,
-            weights="./pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
+            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
         net_decoder = builder.build_decoder(
             arch="ppm_deepsup",
             fc_dim=2048,
             num_class=150,
-            weights="./pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
+            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
             use_softmax=True)
         crit = nn.NLLLoss(ignore_index=-1)
         self.segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)

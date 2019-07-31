@@ -3,8 +3,16 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 import time
-import urllib
-import re
+import config
+from utils.config import cfg
+import json
+import torch
+from utils.stylizer import styleTrans,test_transform
+from utils.genMask import calmask
+import numpy as np
+import pandas as pd
+from torchvision.utils import make_grid
+from PIL import Image,ImageFilter
 
 from datetime import timedelta
 
@@ -37,31 +45,62 @@ def go_into_a_painting():
         basepath = os.path.abspath(os.path.dirname(__file__))  # 当前文件所在路径
 
         upload_path = os.path.join(basepath, 'static/images', secure_filename(f.filename))  # 注意：没有的文件夹一定要先创建，不然会提示没有该路径
-        f.save(upload_path)
-
         # 使用Opencv转换一下图片格式和名称
-        # img = cv2.imread(upload_path)
-        # cv2.imwrite(os.path.join(basepath, 'static/images', 'content.jpg'), img)
+        img = cv2.imread(upload_path)
+        cv2.imwrite(os.path.join(basepath, 'static/images', 'image1.jpg'), img)
 
-        return redirect(url_for('style'))
+        # cal mask
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        content = "static/images/image1.jpg"
+        content = Image.open(content)
+
+        cm = calmask(cfg,gpu=0)
+        img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
+
+        mask = cm.inference(img=img)
+        # _max = pd.value_counts(mask.flatten()).keys()[0]
+        _mask = mask = np.where(mask == 12, 255, 0)
+        mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
+        mask.save('static/mask.png')
+
+        mask = mask.convert("RGBA")
+        pixdata = mask.load()
+        L, H = mask.size
+        for l in range(L):
+            for h in range(H):
+                if pixdata[l, h][0] == 0 and pixdata[l, h][1] == 0 and pixdata[l, h][2] == 0:
+                    pixdata[l, h] = (0, 0, 0, 0)
+
+        mask.save('static/mask_new.png')
+
+
+        imagenew = Image.new("RGBA", (512, 512))
+        imagenew.paste(content,(0,0), mask=mask)
+        imagenew.save('static/segmention.png')
+
+        redirect(url_for('style'))
+
 
     return render_template('upload.html')
 
-
-@app.route('/style', methods=['GET', 'POST'])
+@app.route('/style', methods=['POST','GET'])
 def style():
-    
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-    stylepath = os.path.join(path, 'static/i')
-    img = cv2.imread(stylepath)
-    cv2.imwrite(os.path.join(path, 'static/images', 'style.jpg'), img)
+    # if request.method == 'POST':
 
+    #     return render_template('upload_ok.html', userinput=user_input, val1=time.time())
     return render_template('style.html')
-
+    # data = json.loads(request.form.get('data'))
+    # style = data['style']
+    # print("transfer!")
+    # print(style)
+    # # data = somefunction()   
+    # # return data                  
+    # return "success"
 
 
 @app.route('/result', methods=['POST', 'GET'])
 def result():
     return render_template('result.html')
 
-    
+if __name__ == "__main__":
+    app.run(host="localhost",port=8080,debug=True)
