@@ -23,21 +23,22 @@ import pandas as pd
 
 class calmask():
     def __init__(self,cfg,gpu=0):
-        # torch.cuda.set_device(gpu)
+        print(torch.cuda.get_device_name(0))
+        torch.cuda.set_device(gpu)
         builder = ModelBuilder()
         net_encoder = builder.build_encoder(
             arch="resnet50dilated",
             fc_dim=2048,
-            weights="./pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
+            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
         net_decoder = builder.build_decoder(
             arch="ppm_deepsup",
             fc_dim=2048,
             num_class=150,
-            weights="./pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
+            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
             use_softmax=True)
         crit = nn.NLLLoss(ignore_index=-1)
         self.segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
-        # self.segmentation_module.cuda()
+        self.segmentation_module.cuda()
         self.gpu = gpu
         self.cfg = cfg
         self.normalize = transforms.Normalize(

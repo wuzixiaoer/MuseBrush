@@ -6,6 +6,7 @@ import time
 import config
 from utils.config import cfg
 import json
+import torch
 from utils.stylizer import styleTrans,test_transform
 from utils.genMask import calmask
 import numpy as np
@@ -46,12 +47,19 @@ def go_into_a_painting():
         f.save(upload_path)
 
         # 使用Opencv转换一下图片格式和名称
-        # img = cv2.imread(upload_path)
-        # cv2.imwrite(os.path.join(basepath, 'static/images', 'content.jpg'), img)
+        img = cv2.imread(upload_path)
+        cv2.imwrite(os.path.join(basepath, 'static/images', 'image1.jpg'), img)
 
         # cal mask
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        content = "static/images/image1.jpg"
+        content = Image.open(content)
+
         cm = calmask(cfg,gpu=0)
-        img = cv2.cvtColor(np.asarray(f),cv2.COLOR_RGB2BGR)  
+
+        # print(content)
+        img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
 
         mask = cm.inference(img=img)
         _max = pd.value_counts(mask.flatten()).keys()[0]
