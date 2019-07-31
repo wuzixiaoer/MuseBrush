@@ -4,6 +4,13 @@ import os
 import cv2
 import time
 import config
+from utils.config import cfg
+import json
+from utils.stylizer import styleTrans,test_transform
+from utils.genMask import calmask
+import numpy as np
+import pandas as pd
+from PIL import Image,ImageFilter
 
 from datetime import timedelta
 
@@ -43,18 +50,34 @@ def go_into_a_painting():
         # img = cv2.imread(upload_path)
         # cv2.imwrite(os.path.join(basepath, 'static/images', 'test1.jpg'), img)
 
-        return redirect(url_for('style'))
+        # cal mask
+        cm = calmask(cfg,gpu=0)
+        img = cv2.cvtColor(np.asarray(f),cv2.COLOR_RGB2BGR)  
+
+        mask = cm.inference(img=img)
+        _max = pd.value_counts(mask.flatten()).keys()[0]
+        mask = np.where(mask == _max, 255, 0)
+        mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
+        mask.save('static/mask.png')
+
+        # redirect(url_for('style'))
+
 
     return render_template('upload.html')
 
-@app.route('/style', methods=['POST', 'GET'])
+@app.route('/style', methods=['POST','GET'])
 def style():
-    if request.method == 'POST':
+    # if request.method == 'POST':
 
-        return render_template('upload_ok.html', userinput=user_input, val1=time.time())
-
+    #     return render_template('upload_ok.html', userinput=user_input, val1=time.time())
     return render_template('style.html')
-
+    # data = json.loads(request.form.get('data'))
+    # style = data['style']
+    # print("transfer!")
+    # print(style)
+    # # data = somefunction()   
+    # # return data                  
+    # return "success"
 
 if __name__ == '__main__':
     # app.debug = True

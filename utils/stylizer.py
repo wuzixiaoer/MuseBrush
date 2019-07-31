@@ -7,7 +7,7 @@ from os.path import basename
 from os.path import splitext
 from torchvision import transforms
 from torchvision.utils import save_image
-import net
+import utils.net
 
 class styleTrans():
     def __init__(self,device,decoder_path=None,transform_path=None,vgg_path=None):

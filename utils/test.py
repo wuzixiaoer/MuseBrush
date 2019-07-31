@@ -92,6 +92,8 @@ mask = np.where(mask == _max, 255, 0)
 mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
 mask.save('./mask.png')
 
+
+
 grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
 output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
 content_s = Image.fromarray(output_ndarr)

@@ -9,21 +9,21 @@ import torch.nn as nn
 from scipy.io import loadmat
 import csv
 # Our libs
-from dataset import TestDataset
-from models import ModelBuilder, SegmentationModule
+from utils.dataset import TestDataset
+from utils.models import ModelBuilder, SegmentationModule
 #from utils import colorEncode, find_recursive, setup_logger
-from lib.nn import user_scattered_collate, async_copy_to
-from lib.utils import as_numpy
+from utils.lib.nn import user_scattered_collate, async_copy_to
+from utils.lib.utils import as_numpy
 import cv2
 from tqdm import tqdm
-from config import cfg
+from utils.config import cfg
 from PIL import Image,ImageFilter
 from torchvision import transforms
 import pandas as pd
 
 class calmask():
     def __init__(self,cfg,gpu=0):
-        torch.cuda.set_device(gpu)
+        # torch.cuda.set_device(gpu)
         builder = ModelBuilder()
         net_encoder = builder.build_encoder(
             arch="resnet50dilated",
