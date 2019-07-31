@@ -78,24 +78,44 @@ def go_into_a_painting():
         imagenew.paste(content,(0,0), mask=mask)
         imagenew.save('static/segmention.png')
 
-        redirect(url_for('style'))
+        redirect('./style'))
 
 
     return render_template('upload.html')
 
 @app.route('/style', methods=['POST','GET'])
 def style():
-    # if request.method == 'POST':
-
-    #     return render_template('upload_ok.html', userinput=user_input, val1=time.time())
+    if request.method == 'POST':
+        style_label = int(request.form.get('style'))
+        style = Image.open("image"+style_label+".png")
+        # 进行风格迁移
+        content = Image.open(content)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        styleTransfer(content,device)
     return render_template('style.html')
-    # data = json.loads(request.form.get('data'))
-    # style = data['style']
-    # print("transfer!")
-    # print(style)
-    # # data = somefunction()   
-    # # return data                  
-    # return "success"
+
+
+def styleTransfer(content,device):
+    vgg_path='./pretrained/style_models/vgg_normalised.pth'
+    decoder_path='./pretrained/style_models/decoder_iter_76000.pth'
+    transform_path='./pretrained/style_models/sa_module_iter_76000.pth'
+    crop='store_true'
+    content_size=512
+    style_size=512
+    alpha=0.6
+    content_tf = test_transform(content_size,crop)
+    style_tf = test_transform(style_size,crop)
+    _content = content_tf(content)
+    _style = style_tf(style)
+
+    _style = _style.to(device).unsqueeze(0)
+    _content = _content.to(device).unsqueeze(0)
+    transformer = styleTrans(device=device,vgg_path=vgg_path,
+                            transform_path=transform_path,
+                            decoder_path=decoder_path)
+    with torch.no_grad():
+        content_trans = transformer.stansform(content=_content,style=_style,alpha=alpha)
+
 
 
 @app.route('/result', methods=['POST', 'GET'])
