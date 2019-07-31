@@ -3,7 +3,6 @@ from werkzeug.utils import secure_filename
 import os
 import cv2
 import time
-<<<<<<< HEAD
 import config
 from utils.config import cfg
 import json
@@ -12,10 +11,6 @@ from utils.genMask import calmask
 import numpy as np
 import pandas as pd
 from PIL import Image,ImageFilter
-=======
-import urllib
-import re
->>>>>>> 58593f05a72150961598dd97e7ec88e2273ffcd9
 
 from datetime import timedelta
 
@@ -64,7 +59,7 @@ def go_into_a_painting():
         mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
         mask.save('static/mask.png')
 
-        # redirect(url_for('style'))
+        redirect(url_for('style'))
 
 
     return render_template('upload.html')
@@ -88,4 +83,5 @@ def style():
 def result():
     return render_template('result.html')
 
-    
+if __name__ == "__main__":
+    app.run(host="localhost",port=8080,debug=True)

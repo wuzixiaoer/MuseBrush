@@ -37,7 +37,7 @@ class calmask():
             use_softmax=True)
         crit = nn.NLLLoss(ignore_index=-1)
         self.segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
-        self.segmentation_module.cuda()
+        # self.segmentation_module.cuda()
         self.gpu = gpu
         self.cfg = cfg
         self.normalize = transforms.Normalize(
