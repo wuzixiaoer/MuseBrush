@@ -1,5 +1,9 @@
+import sys
+sys.path.append('./utils/')
+
 import argparse
 import os
+
 import torch
 import torch.nn as nn
 from PIL import Image
@@ -7,7 +11,7 @@ from os.path import basename
 from os.path import splitext
 from torchvision import transforms
 from torchvision.utils import save_image
-import utils.net
+import net
 
 class styleTrans():
     def __init__(self,device,decoder_path=None,transform_path=None,vgg_path=None):

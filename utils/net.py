@@ -1,7 +1,8 @@
+
 import torch.nn as nn
 import torch
-from utils.function import normal
-from utils.function import calc_mean_std
+from function import normal
+from function import calc_mean_std
 
 decoder = nn.Sequential(
     nn.ReflectionPad2d((1, 1, 1, 1)),

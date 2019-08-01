@@ -29,12 +29,12 @@ class calmask():
         net_encoder = builder.build_encoder(
             arch="resnet50dilated",
             fc_dim=2048,
-            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
+            weights="./utils/pretrained/baseline-resnet50dilated-ppm_deepsup/encoder_epoch_20.pth")
         net_decoder = builder.build_decoder(
             arch="ppm_deepsup",
             fc_dim=2048,
             num_class=150,
-            weights="utils/pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
+            weights="./utils/pretrained/baseline-resnet50dilated-ppm_deepsup/decoder_epoch_20.pth",
             use_softmax=True)
         crit = nn.NLLLoss(ignore_index=-1)
         self.segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)

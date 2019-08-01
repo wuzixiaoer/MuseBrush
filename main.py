@@ -16,6 +16,8 @@ from PIL import Image,ImageFilter
 
 from datetime import timedelta
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # 设置允许的文件格式
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'bmp'])
 
@@ -50,11 +52,10 @@ def go_into_a_painting():
         cv2.imwrite(os.path.join(basepath, 'static/images', 'image1.jpg'), img)
 
         # cal mask
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         content = "static/images/image1.jpg"
         content = Image.open(content)
 
-        cm = calmask(cfg,gpu=0)
+        cm = calmask(cfg, gpu=0)
         img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
 
         mask = cm.inference(img=img)
@@ -78,7 +79,7 @@ def go_into_a_painting():
         imagenew.paste(content,(0,0), mask=mask)
         imagenew.save('static/segmention.png')
 
-        redirect('./style'))
+        redirect('/style')
 
 
     return render_template('upload.html')
@@ -86,19 +87,31 @@ def go_into_a_painting():
 @app.route('/style', methods=['POST','GET'])
 def style():
     if request.method == 'POST':
-        style_label = int(request.form.get('style'))
-        style = Image.open("image"+style_label+".png")
+
+        style_label = request.form.get('style')
+
+        print(style_label)
+
+        style = Image.open("static/style_img/"+style_label+".jpg")
         # 进行风格迁移
+        content = "static/images/image1.jpg"
         content = Image.open(content)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        styleTransfer(content,style,device)
+        
+        content_s = styleTransfer(content,style,device) # tensor
+
+        grid = make_grid(content_s, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
+        output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+        content_s = Image.fromarray(output_ndarr)
+
+        content_s.save('static/content_transfered.png')
+
     return render_template('style.html')
 
 
-def styleTransfer(content,device):
-    vgg_path='./pretrained/style_models/vgg_normalised.pth'
-    decoder_path='./pretrained/style_models/decoder_iter_76000.pth'
-    transform_path='./pretrained/style_models/sa_module_iter_76000.pth'
+def styleTransfer(content, style, device):
+    vgg_path='./utils/pretrained/style_models/vgg_normalised.pth'
+    decoder_path='./utils/pretrained/style_models/decoder_iter_100000.pth'
+    transform_path='./utils/pretrained/style_models/sa_module_iter_100000.pth'
     crop='store_true'
     content_size=512
     style_size=512
@@ -116,6 +129,7 @@ def styleTransfer(content,device):
     with torch.no_grad():
         content_trans = transformer.stansform(content=_content,style=_style,alpha=alpha)
 
+    return content_trans
 
 
 @app.route('/result', methods=['POST', 'GET'])
