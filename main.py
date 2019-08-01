@@ -91,7 +91,7 @@ def style():
         # 进行风格迁移
         content = Image.open(content)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        styleTransfer(content,device)
+        styleTransfer(content,style,device)
     return render_template('style.html')
 
 
