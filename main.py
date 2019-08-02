@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, make_response, jsonify
 from werkzeug.utils import secure_filename
 import os
 import cv2
@@ -21,15 +21,28 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # 设置允许的文件格式
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'bmp'])
 
+class PrefixMiddleware(object):
+    def __init__(self, app, prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f'):
+        self.app=app
+        self.prefix=prefix
+    def __call__(self, environ, start_response):
+        if environ['PATH_INFO'].startswith(self.prefix):
+            environ['PATH_INFO']=environ['PATH_INFO'][len(self.prefix):]
+            environ['SCRIPT_NAME']=self.prefix
+            return self.app(environ, start_response)
+        else:
+            start_response('404', [('Content-Type', 'text/plain')])
+            return ['This url does not belong to the app.'.encode()]
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-
+#bp = Blueprint('burritos', __name__, url_prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 app = Flask(__name__)
+#app.register_blueprint(bp, url_prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 # 设置静态文件缓存过期时间
 app.send_file_max_age_default = timedelta(seconds=1)
-
+app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 @app.route('/')
 def index():
     return redirect(url_for('go_into_a_painting'))
@@ -137,4 +150,9 @@ def result():
     return render_template('result.html')
 
 if __name__ == "__main__":
+<<<<<<< Updated upstream
     app.run(host="localhost",port=8080,debug=True)
+=======
+    app.run(host="0.0.0.0",port=8080,debug=True,threaded=True)
+
+>>>>>>> Stashed changes
