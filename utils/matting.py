@@ -14,7 +14,7 @@ def load_model(device):
     myModel = net()
     myModel.eval()
     nm = {}
-    state = torch.load('./pretrained/model.pth')
+    state = torch.load('utils/pretrained/model.pth')
     for k in state.keys():
         if 'tracked' not in k:
             nm[k] = state[k]
