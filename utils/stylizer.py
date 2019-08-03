@@ -8,6 +8,8 @@ from os.path import splitext
 from torchvision import transforms
 from torchvision.utils import save_image
 import net
+import cv2
+import numpy as np
 
 class styleTrans():
     def __init__(self,device,decoder_path=None,transform_path=None,vgg_path=None):
@@ -80,3 +82,39 @@ def test_transform(size, crop):
     transform_list.append(transforms.ToTensor())
     transform = transforms.Compose(transform_list)
     return transform
+
+def get_avg_std(image): # 得到均值和标准差
+    avg = []
+    std = []
+    image_avg_l = np.mean(image[:,:,0])
+    image_std_l = np.std(image[:,:,0])
+    image_avg_a = np.mean(image[:,:,1])
+    image_std_a = np.std(image[:,:,1])
+    image_avg_b = np.mean(image[:,:,2])
+    image_std_b = np.std(image[:,:,2])
+    avg.append(image_avg_l)
+    avg.append(image_avg_a)
+    avg.append(image_avg_b)
+    std.append(image_std_l)
+    std.append(image_std_a)
+    std.append(image_std_b)
+    return (avg,std)
+
+def Reinhard_color_transfer(content, style):
+    src = cv2.imread(content)
+    src = cv2.cvtColor(src, cv2.COLOR_BGR2LAB)
+    des = cv2.imread(style)
+    des = cv2.cvtColor(des, cv2.COLOR_BGR2LAB)
+    src_avg, src_std = get_avg_std(src)
+    des_avg, des_std = get_avg_std(des)
+    height,width,channel = src.shape
+    for i in range(0, height):
+        for j in range(0, width):
+            for k in range(0, channel):
+                t = src[i,j,k]
+                t = (t - src_avg[k])*(des_std[k] / src_std[k]) + des_avg[k]
+                t = 0 if t < 0 else t
+                t = 255 if t > 255 else t
+                src[i,j,k] = t
+    src = cv2.cvtColor(src, cv2.COLOR_LAB2BGR)
+    return src
