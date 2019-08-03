@@ -9,8 +9,7 @@ import torch.nn as nn
 from scipy.io import loadmat
 import csv
 import sys
-sys.path.append('../utils/')
-from models import ModelBuilder, SegmentationModule
+#sys.path.append('../')
 from lib.nn import user_scattered_collate, async_copy_to
 from lib.utils import as_numpy
 import cv2
@@ -26,13 +25,13 @@ from torchvision.utils import make_grid
 import pandas as pd
 from PIL import Image,ImageFilter
 from stylizer import styleTrans,test_transform
-from genMask import calmask
+from matting import mat
 
-cfg.merge_from_file("./config/ade20k-resnet50dilated-ppm_deepsup.yaml")
+torch.set_grad_enabled(False)
 
 # const for style trans
-content="./imgs/li.jpg"
-style = "./imgs/sy.jpg,./imgs/sy_patch.jpg"
+content="/home/yelab/pytorch-gpu/Style-Transfer-with-Style-Attentional-Networks/content/brad_pitt.jpg"
+style = "./imgs/brushstrokes.jpg"
 vgg_path='./pretrained/style_models/vgg_normalised.pth'
 decoder_path='./pretrained/style_models/decoder_iter_100000.pth'
 transform_path='./pretrained/style_models/sa_module_iter_100000.pth'
@@ -55,74 +54,51 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 assert content
 assert style
 
-# Path preprocessing
-if os.path.isdir(style):
-    style_paths = [os.path.join(style, f) for f in
-                   os.listdir(style)]
-else:
-    style_paths = style.split(',')
-    if len(style_paths) == 1:
-        style_paths = [style]
-    else:
-        do_interpolation = True
-if not os.path.exists(output_path):
-    os.mkdir(output_path)
-
-
 content_tf = test_transform(content_size,crop)
 style_tf = test_transform(style_size,crop)
 # preprocessing the image
-#style = Image.open(style)
-#csize = content.size
-
-transformer = styleTrans(device=device,vgg_path=vgg_path,
-                transform_path=transform_path,
-                decoder_path=decoder_path)
-"""
-ssize = style.size
-box = (ssize[0]-csize[0],ssize[1]-csize[1],ssize[0],ssize[1])
-style = style.crop(box)
-"""
-
-patch_percent = 0.8
 content = Image.open(content)
+style = Image.open(style)
+csize = content.size
 
-_style = torch.stack([style_tf(Image.open(p)) for p in style_paths])
-_content = content_tf(content) \
-            .unsqueeze(0).expand_as(_style)
-_style = _style.to(device)
-_content = _content.to(device)
+
+_content = content_tf(content)
+_style = style_tf(style)
+
+_style = _style.to(device).unsqueeze(0)
+_content = _content.to(device).unsqueeze(0)
+transformer = styleTrans(device=device,vgg_path=vgg_path,
+                        transform_path=transform_path,
+                        decoder_path=decoder_path)
+
 with torch.no_grad():
-    content_trans = transformer.stansform(content=_content,style=_style,interpolation_weights=[patch_percent,1-patch_percent],alpha=alpha)
-    content_trans = content_trans.cpu()
+    content_trans = transformer.stansform(content=_content,style=_style,alpha=alpha)
+content_trans = content_trans.cpu()
+
 
 # cal mask
-cm = calmask(cfg,gpu=0)
+cm = mat(use_gpu=True)
 img = cv2.cvtColor(np.asarray(content),cv2.COLOR_RGB2BGR)  
 
-mask = cm.inference(img=img)
-_max = pd.value_counts(mask.flatten()).keys()[0]
-mask = np.where(mask == _max, 255, 0)
-mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
-mask.save('./results/mask.png')
-
-
+mask = cm.mat_processing(img,512,0.9)
+mask = Image.fromarray(mask).convert('L')
+im = Image.new("RGB", mask.size)
+im.paste(content,mask=mask)
+im.save('./mask.png')
+#mask.save('./mask.png')
 
 grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
 output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
 content_s = Image.fromarray(output_ndarr)
-content_s.save('./results/content_transfered.png')
+#content_s.save('./ss.png')
 
-bg = Image.open(style.split(',')[0])
+bg = style
 locx = bg.size[0]-content_s.size[0]
 locy = bg.size[1]-content_s.size[1]
 
 bg.paste(content_s,box=(locx,locy),mask=mask)
 
-bg.save('./results/embedded.png')
-
-print("Done")
-
+bg.save('./mask.png')
 
 
 

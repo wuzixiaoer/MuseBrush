@@ -1,1 +1,1 @@
-from .models import ModelBuilder, SegmentationModule
+from models import M_Net,T_Net,network

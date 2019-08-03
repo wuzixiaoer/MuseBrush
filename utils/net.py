@@ -1,4 +1,3 @@
-
 import torch.nn as nn
 import torch
 from function import normal
