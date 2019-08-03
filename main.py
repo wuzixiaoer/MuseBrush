@@ -1,20 +1,26 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, make_response, jsonify
-from werkzeug.utils import secure_filename
 import os
 import cv2
 import time
-import config
-from utils.config import cfg
 import json
 import torch
-from utils.stylizer import styleTrans,test_transform
-from utils.genMask import calmask
+import config
+import sys
+sys.path.append('./utils/')
+
 import numpy as np
 import pandas as pd
+from datetime import timedelta
+from werkzeug.utils import secure_filename
+
+from utils.config import cfg
+from utils.matting import mat
+from utils.stylizer import styleTrans,test_transform
+
 from torchvision.utils import make_grid
 from PIL import Image,ImageFilter
 
-from datetime import timedelta
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, make_response, jsonify
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -68,14 +74,15 @@ def go_into_a_painting():
         content = "static/images/image1.jpg"
         content = Image.open(content)
 
-        cm = calmask(cfg, gpu=0)
-        img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
+        cm = mat(use_gpu = True)
+        img = cv2.cvtColor(np.asarray(content),cv2.COLOR_RGB2BGR)  
 
-        mask = cm.inference(img=img)
-        # _max = pd.value_counts(mask.flatten()).keys()[0]
-        _mask = mask = np.where(mask == 12, 255, 0)
-        mask = Image.fromarray(mask.astype(np.uint8)).convert('L')
+        mask = cm.mat_processing(img, 512, 0.9)
+        mask = Image.fromarray(mask).convert('L')
         mask.save('static/mask.png')
+        im = Image.new("RGB", mask.size)
+        im.paste(content, mask=mask)
+        im.save('static/mask_content.png')
 
         mask = mask.convert("RGBA")
         pixdata = mask.load()
@@ -92,7 +99,7 @@ def go_into_a_painting():
         imagenew.paste(content,(0,0), mask=mask)
         imagenew.save('static/segmention.png')
 
-        redirect('/style')
+        return redirect('/style')
 
 
     return render_template('upload.html')
@@ -150,9 +157,5 @@ def result():
     return render_template('result.html')
 
 if __name__ == "__main__":
-<<<<<<< Updated upstream
-    app.run(host="localhost",port=8080,debug=True)
-=======
-    app.run(host="0.0.0.0",port=8080,debug=True,threaded=True)
+    app.run(host="localhost",port=8080,debug=True,threaded=True)
 
->>>>>>> Stashed changes

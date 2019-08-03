@@ -1,11 +1,9 @@
-import sys
-sys.path.append('utils/')
 import os
 import sys
 import torch
 import torch.nn as nn
 import math
-from utils.lib.nn import SynchronizedBatchNorm2d
+from lib.nn import SynchronizedBatchNorm2d
 
 try:
     from urllib import urlretrieve
