@@ -131,6 +131,8 @@ class Self_Attention_Module(nn.Module):
         Fcsc_4 = self.SAN2(content_feats[-2], style_feats[-2])
         if Fcsc_4.shape[2]%2 == 1:
             Fcsc_5_up = Fcsc_5_up[:,:,:-1,:]
+        if Fcsc_4.shape[3]%2 == 1:
+            Fcsc_5_up = Fcsc_5_up[:,:,:,:-1]
         Fcsc_4_plus_5=Fcsc_4+Fcsc_5_up
         Fcsc_4_plus_5=self.merge_conv_pad(Fcsc_4_plus_5)
         Fcsc_m=self.merge_conv(Fcsc_4_plus_5)

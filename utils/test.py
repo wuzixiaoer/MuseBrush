@@ -30,8 +30,8 @@ from matting import mat
 torch.set_grad_enabled(False)
 
 # const for style trans
-content="./imgs/girl.jpg"
-style = "./imgs/3.jpg,./imgs/3_patch.jpg"
+content="./imgs/brad_pitt.jpg"
+style = "./imgs/shouter.jpg,./imgs/shouter_patch.jpg"
 vgg_path='./pretrained/style_models/vgg_normalised.pth'
 decoder_path='./pretrained/style_models/decoder_iter_92000.pth'
 transform_path='./pretrained/style_models/sa_module_iter_92000.pth'

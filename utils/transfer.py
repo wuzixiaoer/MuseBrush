@@ -26,6 +26,7 @@ import pandas as pd
 from PIL import Image,ImageFilter
 from stylizer import styleTrans,test_transform, Reinhard_color_transfer
 from matting import mat
+import copy
 
 class style_transfer():
     def __init__(self):
@@ -42,45 +43,45 @@ class style_transfer():
         self.output_path = './output'
         # Advanced options
         self.preserve_color = 'store_true'
-        self.alpha = 0.8
-        self.gl_ratio = 0.8
+        self.alpha = 1
+        self.gl_ratio = 0.9
         self.style_interpolation_weights = ''
         self.preserve_color = False
         self.do_interpolation = False
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # transform
-        self.trans = None
+        self.trans = test_transform((512,512), None)
         # load model
         self.transformer = styleTrans(device=self.device, vgg_path=self.vgg_path,
                                       transform_path=self.transform_path,
                                       decoder_path=self.decoder_path)
         self.matting = mat(use_gpu=True)
     
-    def img_matting(self, loc):  # 分割
-        content = Image.open(self.content)
-        img = cv2.cvtColor(np.asarray(content), cv2.COLOR_RGB2BGR)
+    def img_matting(self, loc, hsize):  # 分割
+        img = cv2.cvtColor(np.asarray(self.content), cv2.COLOR_RGB2BGR)
         mask = self.matting.mat_processing(img, 512, 0.9)
         mask = Image.fromarray(mask).convert('L')
         im = Image.new('RGB', mask.size)
-        im.paste(content, box=(loc[0], loc[1]), mask=mask)
+        im.paste(self.content, mask=mask)
         # paste to style image
-        style_w, style_h = self.style.size
-        if im.size[0] > style_w:
-            scale = style_w / im_w
-            im = im.resize((int(im_w * scale), int(im_h * scale)), Image.ANTIALIAS)
-            mask = mask.resize((int(im_w * scale), int(im_h * scale)), Image.ANTIALIAS)
-        if im.size[1] > style_h:
-            scale = style_h / im_h
-            im = im.resize((int(im_w * scale), int(im_h * scale)), Image.ANTIALIAS)
-            mask = mask.resize((int(im_w * scale), int(im_h * scale)), Image.ANTIALIAS)
-        res = self.style
-        res.paste(im, mask=mask)
-        return res, mask
+        # style_w, style_h = self.style.size
+        # if im.size[0] > style_w:
+        #     ratio = style_w / im.size[0]
+        #     im = ratio_resize(im, ratio)
+        #     mask = ratio_resize(mask, ratio)
+        # if im.size[1] > style_h:
+        #     ratio = style_h / im.size[1]
+        #     im = ratio_resize(im, ratio)
+        #     mask = ratio_resize(mask, ratio)
+        # res = copy.deepcopy(self.style)
+        # res.paste(im, mask=mask)
+        return im, mask
 
     def img_transfer(self, content):  # 风格迁移
-        patch_trans = test_transform(self.style.size, None)
-        _style = torch.stack([self.trans(self.style), patch_trans(self.patch)])
+        content = content.resize(self.style.size, Image.ANTIALIAS)
+        _style = torch.stack([self.trans(self.style), self.trans(self.patch)])
         _content = self.trans(content).unsqueeze(0).expand_as(_style)
+        
         _style = _style.to(self.device)
         _content = _content.to(self.device)
         with torch.no_grad():
@@ -88,20 +89,44 @@ class style_transfer():
                                                   interpolation_weights=[self.gl_ratio, 1-self.gl_ratio],
                                                   alpha=self.alpha)
             content_trans = content_trans.cpu()
-        return content_trans
+        # grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
+        # output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+        # print(np.shape(output_ndarr))
+        content_s = transforms.ToPILImage()(content_trans[0]).convert('RGB')
+        content_s.save('result/conent_s.png')
+        return content_s
 
     def transfer(self, content, style_dict): # 风格迁移pipeline, content=path, style=path
-        self.content = content
+        self.content = Image.open(content)
         self.style = Image.open(style_dict['style_src'])
-        self.trans = test_transform(self.style.size, None)
+        
         self.patch = Image.open(style_dict['patch_src'])
+        # self.patch = self.patch.resize(self.style.size, Image.ANTIALIAS)
         self.alpha = style_dict['alpha']
         self.gl_ratio = style_dict['gl_ratio']
+        hsize = style_dict['hsize']
         loc = style_dict['loc']
 
-        im, mask = self.img_matting(loc)
-        print(type(im))
-        # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
-        content_trans = self.img_transfer(im)
-        final_result = self.style.paste(content_trans, mask=mask)
+        im, mask = self.img_matting(loc, hsize)
+        mask.save('result/mask.png')
+        im.save('result/im.png')
+        print(mask.size)
+        self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
+        content_s = self.img_transfer(self.content)
+        content_s = content_s.resize(mask.size, Image.ANTIALIAS)
+        # resize
+        bbox = mask.getbbox()
+        mask = mask.crop(bbox)
+        content_s = content_s.crop(bbox)
+        ratio = hsize / mask.size[1]
+        mask = ratio_resize(mask, ratio)
+        content_s = ratio_resize(content_s, ratio)
+        
+        final_result = copy.deepcopy(self.style)
+        final_result.paste(content_s, loc, mask=mask)
+        final_result.save('result/result.png')
         return final_result
+
+
+def ratio_resize(img, scale):
+    return img.resize((int(img.size[0] * scale), int(img.size[1] * scale)), Image.ANTIALIAS)
