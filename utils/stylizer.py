@@ -101,9 +101,11 @@ def get_avg_std(image): # 得到均值和标准差
     return (avg,std)
 
 def Reinhard_color_transfer(content, style):
-    src = cv2.imread(content)
+    #src = cv2.imread(content)
+    src = cv2.cvtColor(np.asarray(content),cv2.COLOR_RGB2BGR)  
     src = cv2.cvtColor(src, cv2.COLOR_BGR2LAB)
-    des = cv2.imread(style)
+    des = cv2.cvtColor(np.asarray(style),cv2.COLOR_RGB2BGR)  
+    #des = cv2.imread(style)
     des = cv2.cvtColor(des, cv2.COLOR_BGR2LAB)
     src_avg, src_std = get_avg_std(src)
     des_avg, des_std = get_avg_std(des)
