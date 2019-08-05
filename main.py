@@ -4,14 +4,13 @@ import time
 import json
 import torch
 import config
-import sys
-sys.path.append('./utils/')
 
 import numpy as np
 import pandas as pd
 from datetime import timedelta
 from werkzeug.utils import secure_filename
 
+import _init_paths
 from utils.config import cfg
 from utils.matting import mat
 from utils.stylizer import styleTrans,test_transform

@@ -8,14 +8,12 @@ import torch
 import torch.nn as nn
 from scipy.io import loadmat
 import csv
-import sys
-sys.path.append('../')
 from lib.nn import user_scattered_collate, async_copy_to
 from lib.utils import as_numpy
 import cv2
 from tqdm import tqdm
 from config import cfg
-import net
+import net as net
 from PIL import Image
 from os.path import basename
 from os.path import splitext
@@ -28,15 +26,17 @@ from stylizer import styleTrans,test_transform, Reinhard_color_transfer
 from matting import mat
 import copy
 
+module_path = os.path.dirname(__file__) 
 class style_transfer():
     def __init__(self):
         # const for style trans
         self.content = ''
         self.style = ''
         self.patch = ''
-        self.vgg_path='./pretrained/style_models/vgg_normalised.pth'
-        self.decoder_path='./pretrained/style_models/decoder_iter_92000.pth'
-        self.transform_path='./pretrained/style_models/sa_module_iter_92000.pth'
+        
+        self.vgg_path = module_path + '/pretrained/style_models/vgg_normalised.pth'
+        self.decoder_path =  module_path + '/pretrained/style_models/decoder_iter_92000.pth'
+        self.transform_path = module_path + '/pretrained/style_models/sa_module_iter_92000.pth'
         # Additional options
         self.crop = None
         self.save_ext = '.jpg'
@@ -93,7 +93,7 @@ class style_transfer():
         # output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
         # print(np.shape(output_ndarr))
         content_s = transforms.ToPILImage()(content_trans[0]).convert('RGB')
-        content_s.save('result/conent_s.png')
+        content_s.save(module_path + '/result/conent_s.png')
         return content_s
 
     def transfer(self, content, style_dict): # 风格迁移pipeline, content=path, style=path
@@ -108,8 +108,8 @@ class style_transfer():
         loc = style_dict['loc']
 
         im, mask = self.img_matting(loc, hsize)
-        mask.save('result/mask.png')
-        im.save('result/im.png')
+        mask.save(module_path + '/result/mask.png')
+        im.save(module_path + '/result/im.png')
         print(mask.size)
         self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
         content_s = self.img_transfer(self.content)
@@ -124,7 +124,7 @@ class style_transfer():
         
         final_result = copy.deepcopy(self.style)
         final_result.paste(content_s, loc, mask=mask)
-        final_result.save('result/result.png')
+        final_result.save(module_path + '/result/result.png')
         return final_result
 
 

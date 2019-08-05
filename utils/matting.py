@@ -5,16 +5,15 @@ import argparse
 import numpy as np
 import os 
 import torch.nn.functional as F
-import sys
 from models.network import net
 
-    
+module_path = os.path.dirname(__file__) 
 def load_model(device):
     print('Loading matting model ')
     myModel = net()
     myModel.eval()
     nm = {}
-    state = torch.load('./pretrained/model.pth')
+    state = torch.load(module_path + '/pretrained/model.pth')
     for k in state.keys():
         if 'tracked' not in k:
             nm[k] = state[k]

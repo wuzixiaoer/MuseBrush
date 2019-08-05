@@ -8,8 +8,6 @@ import torch
 import torch.nn as nn
 from scipy.io import loadmat
 import csv
-import sys
-sys.path.append('../')
 from lib.nn import user_scattered_collate, async_copy_to
 from lib.utils import as_numpy
 import cv2
