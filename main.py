@@ -1,8 +1,6 @@
 import os
-import cv2
 import time
 import json
-import torch
 import config
 
 import numpy as np
@@ -11,20 +9,13 @@ from datetime import timedelta
 from werkzeug.utils import secure_filename
 
 import _init_paths
-from utils.config import cfg
-from utils.matting import mat
-from utils.stylizer import styleTrans,test_transform
-
-from torchvision.utils import make_grid
-from PIL import Image,ImageFilter
-
 from flask import Flask, Blueprint, render_template, request, redirect, url_for, make_response, jsonify
+from utils.transfer import style_transfer
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 设置允许的文件格式
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'bmp'])
+# ALLOWED_EXTENSIONS = set(['png', 'jpg', 'JPG', 'PNG', 'bmp'])
 
 class PrefixMiddleware(object):
     def __init__(self, app, prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f'):
@@ -42,12 +33,39 @@ class PrefixMiddleware(object):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-#bp = Blueprint('burritos', __name__, url_prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 app = Flask(__name__)
-#app.register_blueprint(bp, url_prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 # 设置静态文件缓存过期时间
 app.send_file_max_age_default = timedelta(seconds=1)
+# 添加虚拟根路由
 app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
+
+
+styles = [
+    ['Egon', (400, 0), 0.9, 0.2, 818],
+    ['Edouard', (350, 650), 0.9, 0.2, 1800],
+    ['Landscape', (310, 440), 0.9, 0.6, 128],
+    ['countryside', (630, 330), 0.75, 0.8, 108],
+    ['Seine', (530, 675), 0.95, 0.7, 112],
+    ['Twodogs', (485, 480), 0.95, 0.5, 176],
+    ['Arles', (230, 600), 0.9, 0.7, 196],
+    ['Klimt', (280, 565), 0.9, 0.7, 125],
+    ['soir', (580, 590), 0.9, 0.4, 96],
+    ['Tahitian', (260, 365), 0.9, 0.3, 100],
+    ['coast', (420, 250), 0.8, 0.8, 128]
+]
+
+model = style_transfer()
+@app.route('/style', methods=['POST'])
+def sf():
+    info = request.form.get('info')
+    print(info)
+    content = Image.open(request.files['content'])
+    style_id = request.form.get('style_id')
+    style_dict = {'style_src':os.join(styles[style_id][0], '.jpg'), 'patch_src':os.join(styles[style_id][0], '_patch.jpg'),
+                  'loc': styles[style_id][1], 'alpha':styles[style_id][2], 'gl_ratio':styles[style_id][3], 'hsize': styles[style_id][4]}
+    result = model.trasfer(content, style_dict)
+
+'''
 @app.route('/')
 def index():
     return redirect(url_for('go_into_a_painting'))
@@ -154,7 +172,8 @@ def styleTransfer(content, style, device):
 @app.route('/result', methods=['POST', 'GET'])
 def result():
     return render_template('result.html')
+'''
 
 if __name__ == "__main__":
-    app.run(host="localhost",port=8080,debug=True,threaded=True)
+    app.run(host="localhost", port=8080, threaded=True)
 
