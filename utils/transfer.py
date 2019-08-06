@@ -93,11 +93,10 @@ class style_transfer():
         # output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
         # print(np.shape(output_ndarr))
         content_s = transforms.ToPILImage()(content_trans[0]).convert('RGB')
-        content_s.save(module_path + '/result/conent_s.png')
         return content_s
 
     def transfer(self, content, style_dict): # 风格迁移pipeline, content=path, style=path
-        self.content = Image.open(content)
+        #self.content = Image.open(content)
         self.style = Image.open(style_dict['style_src'])
         
         self.patch = Image.open(style_dict['patch_src'])
@@ -109,8 +108,6 @@ class style_transfer():
 
         im, mask = self.img_matting(loc, hsize)
         mask.save(module_path + '/result/mask.png')
-        im.save(module_path + '/result/im.png')
-        print(mask.size)
         self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
         content_s = self.img_transfer(self.content)
         content_s = content_s.resize(mask.size, Image.ANTIALIAS)
@@ -124,7 +121,7 @@ class style_transfer():
         
         final_result = copy.deepcopy(self.style)
         final_result.paste(content_s, loc, mask=mask)
-        final_result.save(module_path + '/result/result.png')
+        final_result.save(module_path + '/result/result.jpg')
         return final_result
 
 
