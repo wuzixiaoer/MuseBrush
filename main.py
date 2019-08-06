@@ -1,15 +1,13 @@
 import os
-import time
-import json
-import config
+from io import BytesIO
+import base64
+from PIL import Image
 
 import numpy as np
-import pandas as pd
-from datetime import timedelta
-from werkzeug.utils import secure_filename
+# from datetime import timedelta
 
 import _init_paths
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, make_response, jsonify
+from flask import Flask, send_file, request
 from utils.transfer import style_transfer
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,12 +28,12 @@ class PrefixMiddleware(object):
             start_response('404', [('Content-Type', 'text/plain')])
             return ['This url does not belong to the app.'.encode()]
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+#def allowed_file(filename):
+#    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
 # 设置静态文件缓存过期时间
-app.send_file_max_age_default = timedelta(seconds=1)
+#app.send_file_max_age_default = timedelta(seconds=1)
 # 添加虚拟根路由
 app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix='/infer-8438a117-fbef-4184-a6e2-c6ed2d7b224f')
 
@@ -55,16 +53,27 @@ styles = [
 ]
 
 model = style_transfer()
-@app.route('/style', methods=['POST'])
+@app.route('/style', methods=['POST', 'GET'])
 def sf():
-    info = request.form.get('info')
-    print(info)
+    print(request.method)
+    print(request.form.to_dict())
     content = Image.open(request.files['content'])
-    style_id = request.form.get('style_id')
-    style_dict = {'style_src':os.join(styles[style_id][0], '.jpg'), 'patch_src':os.join(styles[style_id][0], '_patch.jpg'),
+    print(type(content))
+    style_id = int(request.form['style_id'])
+    print(style_id)
+    style_dict = {'style_src':os.path.join('utils/imgs/',styles[style_id][0]+'.jpg'), 'patch_src':os.path.join('utils/imgs/', styles[style_id][0]+'_patch.jpg'),
                   'loc': styles[style_id][1], 'alpha':styles[style_id][2], 'gl_ratio':styles[style_id][3], 'hsize': styles[style_id][4]}
-    result = model.trasfer(content, style_dict)
-
+    result = model.transfer(content, style_dict)
+    print('get result')
+    img_buffer = BytesIO()
+    result.save(img_buffer, 'jpeg')
+    base64_str = base64.b64encode(img_buffer.getvalue())
+    # bytesio = BytesIO()
+    # result.save(bytesio, 'jpeg')
+    # bytesio.seek(0)
+    print('Done')
+    # return send_file(bytesio, mimetype='img/jpg')
+    return base64_str
 '''
 @app.route('/')
 def index():
@@ -175,5 +184,5 @@ def result():
 '''
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=8080, threaded=True)
+    app.run(host="0.0.0.0", port=8080, threaded=True)
 

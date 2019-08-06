@@ -96,7 +96,7 @@ class style_transfer():
         return content_s
 
     def transfer(self, content, style_dict): # 风格迁移pipeline, content=path, style=path
-        #self.content = Image.open(content)
+        self.content = content
         self.style = Image.open(style_dict['style_src'])
         
         self.patch = Image.open(style_dict['patch_src'])
@@ -107,9 +107,12 @@ class style_transfer():
         loc = style_dict['loc']
 
         im, mask = self.img_matting(loc, hsize)
-        mask.save(module_path + '/result/mask.png')
-        self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
+        print('matting done')
+        # mask.save(module_path + '/result/mask.png')
+        # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
+        print('color transfer done')
         content_s = self.img_transfer(self.content)
+        print('style transfer done')
         content_s = content_s.resize(mask.size, Image.ANTIALIAS)
         # resize
         bbox = mask.getbbox()
@@ -121,7 +124,7 @@ class style_transfer():
         
         final_result = copy.deepcopy(self.style)
         final_result.paste(content_s, loc, mask=mask)
-        final_result.save(module_path + '/result/result.jpg')
+        # final_result.save(module_path + '/result/result.jpg')
         return final_result
 
 

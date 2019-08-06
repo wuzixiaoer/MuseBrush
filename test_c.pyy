@@ -1,0 +1,8 @@
+import _init_paths
+from utils.transfer import style_transfer
+
+t = style_transfer()
+style_dict = {'style_src':'./utils/imgs/countryside.jpg', 'patch_src':'./utils/imgs/countryside_patch.jpg',
+         'loc': (630, 330), 'alpha':0.95, 'gl_ratio':0.8, 'hsize': 108}
+result = t.transfer('./utils/imgs/man.jpg', style_dict)
+# countryside.jpg 630,330 108
