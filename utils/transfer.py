@@ -66,7 +66,7 @@ class style_transfer():
         # im.save(module_path + '/result/im.png')
         return im, mask
 
-    def img_transfer(self, content):  # 风格迁移
+    def img_transfer(self, content, mask):  # 风格迁移
         # content = content.resize(self.style.size, Image.ANTIALIAS)
         style = copy.deepcopy(self.style)
         patch = copy.deepcopy(self.patch)
@@ -80,7 +80,7 @@ class style_transfer():
         with torch.no_grad():
             content_trans = self.transformer.stansform(content=_content, style=_style,
                                                   interpolation_weights=[self.gl_ratio, 1-self.gl_ratio],
-                                                  alpha=self.alpha)
+                                                  alpha=self.alpha, mask=mask)
             content_trans = content_trans.cpu()
         grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
         output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
@@ -105,12 +105,8 @@ class style_transfer():
         mask.save(module_path + '/result/mask.png')
         # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
         # print('color transfer done')
-<<<<<<< Updated upstream
-        content_s = self.img_transfer(im)
-=======
-        content_s = self.img_transfer(self.content)
+        content_s = self.img_transfer(self.content, mask)
         torch.cuda.empty_cache()
->>>>>>> Stashed changes
         print('style transfer done')
         content_s = content_s.resize(mask.size)
         # content_s.save(module_path + '/result/cs.jpg')
