@@ -4,5 +4,6 @@ ckpt/
 vis/
 log/
 utils/pretrained/
-utils/imgs
+utils/imgs/
+utils/result/
 __pycache__/

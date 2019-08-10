@@ -56,7 +56,7 @@ class styleTrans():
         style_f=[Style4_1,Style5_1]
         return content_f, style_f
     
-    def stansform(self, content,style,alpha=0.4,interpolation_weights=None):
+    def stansform(self, content, style, alpha=0.4, interpolation_weights=None):
         assert (0.0 <= alpha <= 1.0)
         content_f, style_f=self.feat_extractor(content, style)
         Fccc = self.sa_module(content_f,content_f)
