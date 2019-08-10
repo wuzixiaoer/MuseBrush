@@ -136,6 +136,7 @@ class Self_Attention_Module(nn.Module):
         Fcsc_4_plus_5=Fcsc_4+Fcsc_5_up
         Fcsc_4_plus_5=self.merge_conv_pad(Fcsc_4_plus_5)
         Fcsc_m=self.merge_conv(Fcsc_4_plus_5)
+        print(Fcsc_m.size())
         return Fcsc_m
 
 class Net(nn.Module):

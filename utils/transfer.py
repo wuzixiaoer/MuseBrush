@@ -50,7 +50,7 @@ class style_transfer():
         self.do_interpolation = False
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # transform
-        self.trans = test_transform((512,512), None)
+        self.trans = test_transform(0, None)
         # load model
         self.transformer = styleTrans(device=self.device, vgg_path=self.vgg_path,
                                       transform_path=self.transform_path,
@@ -75,13 +75,24 @@ class style_transfer():
         #     mask = ratio_resize(mask, ratio)
         # res = copy.deepcopy(self.style)
         # res.paste(im, mask=mask)
+        im.save(module_path + '/result/im.png')
         return im, mask
 
     def img_transfer(self, content):  # 风格迁移
-        content = content.resize(self.style.size, Image.ANTIALIAS)
-        _style = torch.stack([self.trans(self.style), self.trans(self.patch)])
+        # content = content.resize(self.style.size, Image.ANTIALIAS)
+        style = copy.deepcopy(self.style)
+        patch = copy.deepcopy(self.patch)
+        style = style.resize(content.size)
+        patch = patch.resize(content.size)
+        # print(content.size)
+        _style = torch.stack([self.trans(style), self.trans(patch)])
         _content = self.trans(content).unsqueeze(0).expand_as(_style)
-        
+        # print(_style.size())
+        # print(_content.size())
+        # mask = mask.resize((int(mask.size[0]/8), int(mask.size[1]/8)))
+        # mask = self.trans(mask).unsqueeze(0)
+        # print(mask.size())
+        # mask = mask.to(self.device)
         _style = _style.to(self.device)
         _content = _content.to(self.device)
         with torch.no_grad():
@@ -108,20 +119,23 @@ class style_transfer():
 
         im, mask = self.img_matting(loc, hsize)
         print('matting done')
-        # mask.save(module_path + '/result/mask.png')
+        mask.save(module_path + '/result/mask.png')
         # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
-        print('color transfer done')
+        # print('color transfer done')
         content_s = self.img_transfer(self.content)
         print('style transfer done')
-        content_s = content_s.resize(mask.size, Image.ANTIALIAS)
+        content_s = content_s.resize(mask.size)
+        content_s.save(module_path + '/result/cs.jpg')
         # resize
         bbox = mask.getbbox()
         mask = mask.crop(bbox)
         content_s = content_s.crop(bbox)
+        # content_s.save(module_path + '/result/cs.jpg')
         ratio = hsize / mask.size[1]
         mask = ratio_resize(mask, ratio)
+        mask = mask.convert('L')
         content_s = ratio_resize(content_s, ratio)
-        
+        # print(content_s.size, mask.size)
         final_result = copy.deepcopy(self.style)
         final_result.paste(content_s, loc, mask=mask)
         # final_result.save(module_path + '/result/result.jpg')
@@ -129,4 +143,7 @@ class style_transfer():
 
 
 def ratio_resize(img, scale):
-    return img.resize((int(img.size[0] * scale), int(img.size[1] * scale)), Image.ANTIALIAS)
+    img = cv2.cvtColor(np.asarray(img),cv2.COLOR_RGB2BGR)
+    img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    return img

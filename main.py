@@ -39,17 +39,14 @@ app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix='/infer-8438a117-fbef-4184-
 
 
 styles = [
-    ['Egon', (400, 0), 0.9, 0.2, 818],
-    ['Edouard', (350, 650), 0.9, 0.2, 1800],
+    ['Edouard', (280, 450), 0.9, 0.8, 750],
     ['Landscape', (310, 440), 0.9, 0.6, 128],
-    ['countryside', (630, 330), 0.75, 0.8, 108],
-    ['Seine', (530, 675), 0.95, 0.7, 112],
     ['Twodogs', (485, 480), 0.95, 0.5, 176],
     ['Arles', (230, 600), 0.9, 0.7, 196],
-    ['Klimt', (280, 565), 0.9, 0.7, 125],
-    ['soir', (580, 590), 0.9, 0.4, 96],
-    ['Tahitian', (260, 365), 0.9, 0.3, 100],
-    ['coast', (420, 250), 0.8, 0.8, 128]
+    ['coast', (700, 420), 0.9, 0.8, 128],
+    ['sunday', (900, 650), 0.8, 0.2, 400],
+    ['Milkmaid', (1050, 1300), 0.9, 0.2, 300],
+    ['reaper', (1150, 1000), 0.9, 0.6, 400]
 ]
 
 model = style_transfer()
@@ -74,12 +71,13 @@ def sf():
     print('Done')
     # return send_file(bytesio, mimetype='img/jpg')
     return base64_str
+
 '''
-@app.route('/')
+@app.route('/infer-')
 def index():
     return redirect(url_for('go_into_a_painting'))
 
-@app.route('/go_into_a_painting', methods=['POST', 'GET'])  # 添加路由
+@app.route('/infer-go_into_a_painting', methods=['POST', 'GET'])  # 添加路由
 def go_into_a_painting():
     if request.method == 'POST':
         f = request.files['content']
@@ -130,7 +128,7 @@ def go_into_a_painting():
 
     return render_template('upload.html')
 
-@app.route('/style', methods=['POST','GET'])
+@app.route('/infer-style', methods=['POST','GET'])
 def style():
     if request.method == 'POST':
 
@@ -178,7 +176,7 @@ def styleTransfer(content, style, device):
     return content_trans
 
 
-@app.route('/result', methods=['POST', 'GET'])
+@app.route('/infer-result', methods=['POST', 'GET'])
 def result():
     return render_template('result.html')
 '''
