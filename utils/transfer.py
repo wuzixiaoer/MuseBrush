@@ -105,7 +105,12 @@ class style_transfer():
         mask.save(module_path + '/result/mask.png')
         # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
         # print('color transfer done')
+<<<<<<< Updated upstream
         content_s = self.img_transfer(im)
+=======
+        content_s = self.img_transfer(self.content)
+        torch.cuda.empty_cache()
+>>>>>>> Stashed changes
         print('style transfer done')
         content_s = content_s.resize(mask.size)
         # content_s.save(module_path + '/result/cs.jpg')
