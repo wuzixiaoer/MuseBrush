@@ -30,13 +30,13 @@ module_path = os.path.dirname(__file__)
 class style_transfer():
     def __init__(self):
         # const for style trans
-        self.content = ''
-        self.style = ''
-        self.patch = ''
+        self.content = None
+        self.style = None
+        self.patch = None
         
         self.vgg_path = module_path + '/pretrained/style_models/vgg_normalised.pth'
-        self.decoder_path =  module_path + '/pretrained/style_models/decoder_iter_92000.pth'
-        self.transform_path = module_path + '/pretrained/style_models/sa_module_iter_92000.pth'
+        self.decoder_path =  module_path + '/pretrained/style_models/decoder_iter_180000.pth'
+        self.transform_path = module_path + '/pretrained/style_models/sa_module_iter_180000.pth'
         # Additional options
         self.crop = None
         self.save_ext = '.jpg'
@@ -63,19 +63,7 @@ class style_transfer():
         mask = Image.fromarray(mask).convert('L')
         im = Image.new('RGB', mask.size)
         im.paste(self.content, mask=mask)
-        # paste to style image
-        # style_w, style_h = self.style.size
-        # if im.size[0] > style_w:
-        #     ratio = style_w / im.size[0]
-        #     im = ratio_resize(im, ratio)
-        #     mask = ratio_resize(mask, ratio)
-        # if im.size[1] > style_h:
-        #     ratio = style_h / im.size[1]
-        #     im = ratio_resize(im, ratio)
-        #     mask = ratio_resize(mask, ratio)
-        # res = copy.deepcopy(self.style)
-        # res.paste(im, mask=mask)
-        im.save(module_path + '/result/im.png')
+        # im.save(module_path + '/result/im.png')
         return im, mask
 
     def img_transfer(self, content):  # 风格迁移
@@ -87,12 +75,6 @@ class style_transfer():
         # print(content.size)
         _style = torch.stack([self.trans(style), self.trans(patch)])
         _content = self.trans(content).unsqueeze(0).expand_as(_style)
-        # print(_style.size())
-        # print(_content.size())
-        # mask = mask.resize((int(mask.size[0]/8), int(mask.size[1]/8)))
-        # mask = self.trans(mask).unsqueeze(0)
-        # print(mask.size())
-        # mask = mask.to(self.device)
         _style = _style.to(self.device)
         _content = _content.to(self.device)
         with torch.no_grad():
@@ -100,10 +82,11 @@ class style_transfer():
                                                   interpolation_weights=[self.gl_ratio, 1-self.gl_ratio],
                                                   alpha=self.alpha)
             content_trans = content_trans.cpu()
-        # grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
-        # output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+        grid = make_grid(content_trans, nrow=8, padding=2, pad_value=0,normalize=False, range=None, scale_each=False)
+        output_ndarr = grid.mul_(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
         # print(np.shape(output_ndarr))
-        content_s = transforms.ToPILImage()(content_trans[0]).convert('RGB')
+        # content_s = transforms.ToPILImage()(content_trans[0]).convert('RGB')
+        content_s = Image.fromarray(output_ndarr)
         return content_s
 
     def transfer(self, content, style_dict): # 风格迁移pipeline, content=path, style=path
@@ -122,10 +105,10 @@ class style_transfer():
         mask.save(module_path + '/result/mask.png')
         # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
         # print('color transfer done')
-        content_s = self.img_transfer(self.content)
+        content_s = self.img_transfer(im)
         print('style transfer done')
         content_s = content_s.resize(mask.size)
-        content_s.save(module_path + '/result/cs.jpg')
+        # content_s.save(module_path + '/result/cs.jpg')
         # resize
         bbox = mask.getbbox()
         mask = mask.crop(bbox)
@@ -136,7 +119,11 @@ class style_transfer():
         mask = mask.convert('L')
         content_s = ratio_resize(content_s, ratio)
         # print(content_s.size, mask.size)
-        final_result = copy.deepcopy(self.style)
+        bg = style_dict['bg']
+        if bg is not None:
+            final_result = Image.open(bg)
+        else:
+            final_result = self.style
         final_result.paste(content_s, loc, mask=mask)
         # final_result.save(module_path + '/result/result.jpg')
         return final_result
