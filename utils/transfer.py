@@ -50,7 +50,7 @@ class style_transfer():
         self.do_interpolation = False
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # transform
-        self.trans = test_transform(0, None)
+        self.trans = test_transform((512, 512), None)
         # load model
         self.transformer = styleTrans(device=self.device, vgg_path=self.vgg_path,
                                       transform_path=self.transform_path,
@@ -108,8 +108,9 @@ class style_transfer():
         content_s = self.img_transfer(self.content, mask)
         torch.cuda.empty_cache()
         print('style transfer done')
+        content_s.save(module_path + '/result/cs.png')
         content_s = content_s.resize(mask.size)
-        # content_s.save(module_path + '/result/cs.jpg')
+        # content_s.save(module_path + '/result/cs.png')
         # resize
         bbox = mask.getbbox()
         mask = mask.crop(bbox)
