@@ -29,17 +29,17 @@ app.wsgi_app = PrefixMiddleware(app.wsgi_app, prefix='/infer-8438a117-fbef-4184-
 
 
 styles = [
-    ['Landscape', (310, 440), 0.9, 0.6, 128],
-    ['Twodogs', (485, 480), 0.95, 0.5, 176],
-    ['Arles', (230, 600), 0.9, 0.7, 196],
-    ['coast', (700, 420), 0.9, 0.8, 128],
-    ['sunday', (900, 650), 0.8, 0.2, 400],
-    ['Milkmaid', (1050, 1300), 0.9, 0.2, 300],
-    ['reaper', (1150, 1000), 0.9, 0.6, 400],
-    ['chamber', (200, 200), 0.9, 0.6, 400],
-    ['woman', (0, 0), 0.9, 0.2, 1132],
-    ['van', (0, 0), 0.7, 0.2, 778],
-    ['BertheMorisot', (200, 300), 0.9, 0.2, 1046]
+    ['Landscape', (310, 440), 0.9, 0.6, 300, 0],
+    ['Twodogs', (485, 480), 0.95, 0.5, 300, 0],
+    ['Arles', (230, 500), 0.9, 0.7, 300, 0],
+    ['coast', (700, 420), 0.9, 0.8, 128, 0],
+    ['sunday', (900, 650), 0.8, 0.2, 400, 0],
+    ['Milkmaid', (1050, 1300), 0.9, 0.2, 300, 0],
+    ['reaper', (1150, 1000), 0.9, 0.6, 400, 0],
+    ['chamber', (200, 200), 0.9, 0.6, 400, 0],
+    ['woman', (200, 300), 0.9, 0.2, 832, 1],
+    ['van', (150, 250), 0.9, 0.5, 528, 1],
+    ['BertheMorisot', (200, 300), 0.8, 0.4, 1046, 1]
 ]
 
 model = style_transfer()
@@ -52,7 +52,7 @@ def sf():
     style_id = int(request.form['style_id'])
     print(style_id)
     style_dict = {'style_src':os.path.join('utils/imgs/',styles[style_id][0]+'.jpg'), 'patch_src':os.path.join('utils/imgs/', styles[style_id][0]+'_patch.jpg'),
-                  'loc': styles[style_id][1], 'alpha':styles[style_id][2], 'gl_ratio':styles[style_id][3], 'hsize': styles[style_id][4]}
+                  'loc': styles[style_id][1], 'alpha':styles[style_id][2], 'gl_ratio':styles[style_id][3], 'hsize': styles[style_id][4], 'bg': os.path.join('utils/imgs/',styles[style_id][0]+'_bg.jpg') if styles[style_id][-1]==1 else None}
     result = model.transfer(content, style_dict)
     print('get result')
     img_buffer = BytesIO()

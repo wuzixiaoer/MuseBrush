@@ -3,9 +3,9 @@ from PIL import Image
 from utils.transfer import style_transfer
 
 t = style_transfer()
-style_dict = {'style_src':'./utils/imgs/BertheMorisot.jpg', 'patch_src':'./utils/imgs/BertheMorisot_patch.jpg',
-         'loc': (200, 300), 'alpha':0.9, 'gl_ratio':0.2, 'hsize':1046, 'bg':'./utils/imgs/BertheMorisot_bg.jpg'}
-result = t.transfer(Image.open('./utils/imgs/half.jpg'), style_dict)
+style_dict = {'style_src':'./utils/imgs/BertheMorisot.jpg', 'patch_src':'./utils/imgs/coast_patch.jpg',
+         'loc': (700, 420), 'alpha':0.9, 'gl_ratio':1, 'hsize':256, 'bg':None}
+result = t.transfer(Image.open('./utils/imgs/campus.jpg'), style_dict)
 result.save('utils/result/result.png', quality=95)
 # coast.jpg 700,420 0.9 0.8 128
 # 4.jpg 1300, 600 0.9 0.8 256

@@ -70,13 +70,14 @@ class styleTrans():
             Fccc=Fccc[0:1]
         else:
             feat = self.sa_module(content_f, style_f)
-        mask = np.asarray(mask)
-        mask = cv2.resize(mask,(feat.shape[3],feat.shape[2]))
-        mask = mask.reshape(1,1,mask.shape[0],mask.shape[1])
-        mask = torch.from_numpy(mask).to(self.device,dtype=torch.float32)
-        mask = mask / 255
         feat = feat * alpha + Fccc * (1 - alpha)
-        feat = feat * mask + Fccc * (1-mask)
+        if mask is not None:
+            mask = np.asarray(mask)
+            mask = cv2.resize(mask,(feat.shape[3],feat.shape[2]))
+            mask = mask.reshape(1,1,mask.shape[0],mask.shape[1])
+            mask = torch.from_numpy(mask).to(self.device,dtype=torch.float32)
+            mask = mask / 255
+            feat = feat * mask + Fccc * (1-mask)
         return self.decoder(feat)
 
 def test_transform(size, crop):
