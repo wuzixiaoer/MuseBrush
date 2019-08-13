@@ -57,7 +57,7 @@ class style_transfer():
                                       decoder_path=self.decoder_path)
         self.matting = mat(use_gpu=True)
     
-    def img_matting(self, loc, hsize):  # 分割
+    def img_matting(self):  # 分割
         img = cv2.cvtColor(np.asarray(self.content), cv2.COLOR_RGB2BGR)
         mask = self.matting.mat_processing(img, 512, 0.9)
         mask = Image.fromarray(mask).convert('L')
@@ -100,7 +100,7 @@ class style_transfer():
         hsize = style_dict['hsize']
         loc = style_dict['loc']
 
-        im, mask = self.img_matting(loc, hsize)
+        im, mask = self.img_matting()
         print('matting done')
         mask.save(module_path + '/result/mask.png')
         # self.content = Image.fromarray(cv2.cvtColor(Reinhard_color_transfer(self.content, self.style), cv2.COLOR_BGR2RGB))
@@ -120,13 +120,15 @@ class style_transfer():
         mask = ratio_resize(mask, ratio)
         mask = mask.convert('L')
         content_s = ratio_resize(content_s, ratio)
+        locx = loc[0] - int(content_s.size[0] / 2)
+        locy = loc[1] - int(content_s.size[1] / 2)
         # print(content_s.size, mask.size)
         bg = style_dict['bg']
         if bg is not None:
             final_result = Image.open(bg)
         else:
             final_result = self.style
-        final_result.paste(content_s, loc, mask=mask)
+        final_result.paste(content_s, (locx, locy), mask=mask)
         # final_result.save(module_path + '/result/result.jpg')
         return final_result
 
